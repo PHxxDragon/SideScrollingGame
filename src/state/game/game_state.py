@@ -125,7 +125,6 @@ class Game(State):
             self.group_all.update(now)
             self.item_spawner.items.update(now)
             self.background.update(now)
-            self.player.check_hit()
             self.space.step(0.2)
             self.camera.update()
             if keyboard[pg.K_LEFT]:

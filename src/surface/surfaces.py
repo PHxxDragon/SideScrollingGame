@@ -22,6 +22,7 @@ from src.common.config import BOX_WIDTH
 from src.common.config import BOX_HEIGHT
 from src.common.config import SLIME_WIDTH
 from src.common.config import SLIME_HEIGHT
+from src.common.config import POTION_SCALE
 from src.common.config import HEART_WIDTH
 from src.common.config import HP_SPACE
 from src.common.config import HEART_HEIGHT
@@ -117,6 +118,7 @@ class PlayerSurface(BaseSurface):
     HIT = 7
     DEATH = 8
     IMMUNE = 9
+    STRONG_ATTACK_STATE = 10
 
     def __init__(self):
         super().__init__()
@@ -132,6 +134,7 @@ class PlayerSurface(BaseSurface):
             PlayerSurface.FALL_DOWN_STATe: NoAnimation(self.get_sub_surface(14)),
             PlayerSurface.DOUBLE_JUMP_STATE: Animation([self.get_sub_surface(x) for x in [16, 17, 18, 19]]),
             PlayerSurface.ATTACK_STATE: Animation([self.get_sub_surface(x) for x in [26, 27]], loops=1),
+            PlayerSurface.STRONG_ATTACK_STATE: Animation([self.get_sub_surface(x) for x in [37, 38, 39]], loops=1),
             PlayerSurface.HIT: Animation([self.get_sub_surface(x) for x in [52, 53, 54, 55]], loops=1),
             PlayerSurface.DEATH: Animation(
                 [self.get_sub_surface(x) for x in [65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77]]),
@@ -231,6 +234,15 @@ class BoxSurface(BaseSurface):
                                                        pos_y * BOX_SCALE * BOX_HEIGHT,
                                                        BOX_SCALE * BOX_WIDTH,
                                                        BOX_SCALE * BOX_HEIGHT))
+
+
+class PotionSurface(BaseSurface):
+    def __init__(self):
+        super().__init__()
+        self.image = load_image("assets\\potion.png", True, None, POTION_SCALE, POTION_SCALE)
+        self.images = {
+            BaseSurface.DEFAULT_STATE: NoAnimation(self.image)
+        }
 
 
 class TextSurface(BaseSurface):

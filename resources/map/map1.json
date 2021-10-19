@@ -507,6 +507,30 @@
                  "width":32,
                  "x":88,
                  "y":232
+                }, 
+                {
+                 "gid":951,
+                 "height":128,
+                 "id":172,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":128,
+                 "x":744,
+                 "y":232
+                }, 
+                {
+                 "gid":951,
+                 "height":128,
+                 "id":173,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":128,
+                 "x":840,
+                 "y":232
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -515,7 +539,7 @@
          "y":0
         }],
  "nextlayerid":19,
- "nextobjectid":172,
+ "nextobjectid":174,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",
@@ -548,6 +572,10 @@
         {
          "firstgid":950,
          "source":"heart.tsx"
+        }, 
+        {
+         "firstgid":951,
+         "source":"potion.tsx"
         }],
  "tilewidth":16,
  "type":"map",

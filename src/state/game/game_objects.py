@@ -6,6 +6,7 @@ from src.surface.surfaces import AppleSurface
 from src.surface.surfaces import HeartSurface
 from src.surface.surfaces import SlimeSurface
 from src.surface.surfaces import BoxSurface
+from src.surface.surfaces import PotionSurface
 from src.surface.surfaces import Terrain
 from src.common.map_loader import load_map
 from src.common.config import SCREEN_WIDTH
@@ -36,6 +37,11 @@ from src.common.config import BOX_WIDTH
 from src.common.config import BOX_HEIGHT
 from src.common.config import HEART_WIDTH
 from src.common.config import HEART_HEIGHT
+from src.common.config import POTION_WIDTH
+from src.common.config import POTION_HEIGHT
+from src.common.config import POTION_BOX_WIDTH
+from src.common.config import POTION_BOX_HEIGHT
+from src.common.config import POTION_SCALE
 from src.common.config import BOX_SCALE
 from src.common.config import BOX_BOX_WIDTH
 from src.common.config import BOX_BOX_HEIGHT
@@ -117,8 +123,10 @@ class Map:
                 for obj in layer["objects"]:
                     if obj["gid"] == 950:
                         group.add(HeartItem(game, (SCALE * (obj["x"] + HEART_WIDTH/2), SCALE * (obj["y"] - HEART_HEIGHT/2))))
+                    elif obj["gid"] == 951:
+                        group.add(PotionItem(game, (SCALE * (obj["x"] + POTION_WIDTH/2), SCALE * (obj["y"] - POTION_HEIGHT/2))))
                 self.layers.append(group)
-                self.target_groups.append(group)
+
 
     @staticmethod
     def convert_arr_to_max(idx, width):
@@ -214,6 +222,8 @@ class ItemSpawner:
     def spawn_item(self, item_id, position):
         if item_id == 950:
             self.items.add(HeartItem(self.game, position))
+        elif item_id == 951:
+            self.items.add(PotionItem(self.game, position))
 
 
 class BasePhysicsSprite(BaseSprite):
@@ -230,11 +240,11 @@ class BasePhysicsSprite(BaseSprite):
 class Fruit(BasePhysicsSprite):
     ID = 10000
 
-    def __init__(self, game, position):
+    def __init__(self, game, position, box_width=FRUIT_BOX_WIDTH, box_height=FRUIT_BOX_HEIGHT, scale=FRUIT_SCALE):
         super().__init__(game)
         self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
         self.body.position = position
-        self.shape = pymunk.Poly.create_box(body=self.body, size=(FRUIT_BOX_WIDTH * FRUIT_SCALE, FRUIT_BOX_HEIGHT * FRUIT_SCALE))
+        self.shape = pymunk.Poly.create_box(body=self.body, size=(box_width * scale, box_height * scale))
         game.space.add(self.body, self.shape)
         self.shape.collision_type = Fruit.ID
         self.collision_handler = game.space.add_collision_handler(PLAYER_COLLISION_TYPE, Fruit.ID)
@@ -249,6 +259,18 @@ class Fruit(BasePhysicsSprite):
 
     def get_rect(self):
         return self.surface.get_surface().get_rect(center=self.body.position)
+
+
+class PotionItem(Fruit):
+    def __init__(self, game, position):
+        super().__init__(game, position, POTION_BOX_WIDTH, POTION_BOX_HEIGHT, POTION_SCALE)
+        self.surface = PotionSurface()
+
+    def handler(self, space, arbiter, data):
+        self.game.player.power_up_func()
+        self.game.space.remove(self.body, self.shape)
+        self.kill()
+        return False
 
 
 class HeartItem(Fruit):
@@ -287,9 +309,9 @@ class Box(BasePhysicsSprite):
         self.item = item
         Box.ID = Box.ID + 1
 
-    def get_hit(self):
+    def get_hit(self, damage=1):
         def callback():
-            self.hp = self.hp - 1
+            self.hp = self.hp - damage
             if self.hp <= 0:
                 def callback2():
                     self.game.space.remove(self.body, self.shape)
@@ -336,12 +358,12 @@ class Slime(BasePhysicsSprite):
         self.game.player.get_hit(collide_vector)
         return False
 
-    def get_hit(self):
+    def get_hit(self, damage=1):
         if self.state in [SlimeSurface.HIT_STATE]:
             return
 
         def callback():
-            self.hp = self.hp - 1
+            self.hp = self.hp - damage
             if self.hp <= 0:
                 self.game.space.remove(self.body, self.shape)
                 self.kill()
@@ -391,6 +413,12 @@ class Player(BasePhysicsSprite):
         self.face_right = True
         self.on_ground = 0
         self.double_jumped = False
+        self.power_up = False
+        self.power_up_duration = 0
+
+    def power_up_func(self, duration=1000):
+        self.power_up = True
+        self.power_up_duration = duration
 
     def handler(self, space, arbiter, data):
         self.reach_ground()
@@ -417,10 +445,16 @@ class Player(BasePhysicsSprite):
 
         def callback():
             self.set_state(PlayerSurface.IDLE_STATE)
-        self.set_state(PlayerSurface.ATTACK_STATE, callback)
 
-    def check_hit(self):
-        if self.state in [PlayerSurface.ATTACK_STATE]:
+        if self.power_up:
+            self.set_state(PlayerSurface.STRONG_ATTACK_STATE, callback)
+        else:
+            self.set_state(PlayerSurface.ATTACK_STATE, callback)
+
+    def update(self, now):
+        super().update(now)
+
+        if self.state in [PlayerSurface.ATTACK_STATE, PlayerSurface.STRONG_ATTACK_STATE]:
             if self.face_right:
                 topright = self.body.position[0] + PLAYER_BOX_WIDTH / 2, self.body.position[1] - PLAYER_BOX_HEIGHT / 2
                 attack_rect = pg.Rect(topright[0], topright[1] - 3, PLAYER_ATTACK_RECT_WIDTH * PLAYER_SCALE, PLAYER_ATTACK_RECT_HEIGHT * PLAYER_SCALE)
@@ -433,9 +467,15 @@ class Player(BasePhysicsSprite):
                 bb = sprite.shape.bb
                 enemy_rect = pg.Rect(bb.left, bb.top, bb.right - bb.left, bb.bottom - bb.top)
                 if attack_rect.colliderect(enemy_rect):
-                    sprite.get_hit()
+                    sprite.get_hit(2 if self.power_up else 1)
                     to_be_removed.append(sprite)
             self.targets.remove(*to_be_removed)
+
+        if self.power_up:
+            self.power_up_duration = self.power_up_duration - 1
+            if self.power_up_duration <= 0:
+                self.power_up_duration = 0
+                self.power_up = False
 
     def get_hit(self, collide_vector=None):
         if self.state in [PlayerSurface.HIT, PlayerSurface.IMMUNE]:

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="128" height="16" tilewidth="16" tileheight="16" infinite="0" nextlayerid="19" nextobjectid="172">
+<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="128" height="16" tilewidth="16" tileheight="16" infinite="0" nextlayerid="19" nextobjectid="174">
  <editorsettings>
   <export target="map1.json" format="json"/>
  </editorsettings>
@@ -10,6 +10,7 @@
  <tileset firstgid="739" source="Slime 32x32.tsx"/>
  <tileset firstgid="949" source="Idle.tsx"/>
  <tileset firstgid="950" source="heart.tsx"/>
+ <tileset firstgid="951" source="potion.tsx"/>
  <layer id="13" name="Terrain" width="128" height="16">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -82,5 +83,7 @@
   <object id="166" gid="950" x="356" y="216" width="32" height="32"/>
   <object id="167" gid="950" x="136" y="232" width="32" height="32"/>
   <object id="168" gid="950" x="88" y="232" width="32" height="32"/>
+  <object id="172" gid="951" x="744" y="232" width="128" height="128"/>
+  <object id="173" gid="951" x="840" y="232" width="128" height="128"/>
  </objectgroup>
 </map>
