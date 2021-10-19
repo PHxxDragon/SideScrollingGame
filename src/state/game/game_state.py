@@ -20,6 +20,11 @@ from src.common.config import FRUIT_COLLISION_TYPE
 from src.common.config import SLIME_COLLISION_TYPE
 from src.common.config import THROW_BOX_COLLISION_TYPE
 from src.common.config import UP_SEGMENT_COLLISION_TYPE
+from src.common.config import MAP_WIDTH
+from src.common.config import TILE_WIDTH
+from src.common.config import MAP_HEIGHT
+from src.common.config import TILE_HEIGHT
+from src.common.config import SCALE
 
 
 class Game(State):
@@ -222,7 +227,7 @@ class Game(State):
                 self.player.charge_throw()
 
     def draw(self, surface: pg.Surface, interpolate):
-        big_surface = pg.Surface((4096, 512), pygame.SRCALPHA)
+        big_surface = pg.Surface((MAP_WIDTH * TILE_WIDTH * SCALE, MAP_HEIGHT * TILE_HEIGHT * SCALE), pygame.SRCALPHA)
         self.group_all.draw(big_surface)
         self.item_spawner.items.draw(big_surface)
         surface.blit(self.background.image, self.background.rect)

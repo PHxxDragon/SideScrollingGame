@@ -5,6 +5,7 @@ import pymunk
 
 from src.surface.surfaces import PlayerSurface
 from src.surface.surfaces import AppleSurface
+from src.surface.surfaces import BananaSurface
 from src.surface.surfaces import HeartSurface
 from src.surface.surfaces import SlimeSurface
 from src.surface.surfaces import BoxSurface
@@ -112,6 +113,8 @@ class Map:
                 for obj in layer["objects"]:
                     if obj["gid"] == 705:
                         group.add(Apple(game, (SCALE * (obj["x"] + FRUIT_WIDTH/2), SCALE * (obj["y"] - FRUIT_HEIGHT/2))))
+                    if obj["gid"] == 722:
+                        group.add(Banana(game, (SCALE * (obj["x"] + FRUIT_WIDTH/2), SCALE * (obj["y"] - FRUIT_HEIGHT/2))))
                 self.layers.append(group)
             if layer["name"] in ["Slimes"]:
                 group = pg.sprite.Group()
@@ -170,6 +173,8 @@ class Map:
                     if layer[cur_idx] in UP_BLOCK:
                         marked[cur_idx] = True
                         max_x = cur_x
+                    else:
+                        break
                 up_segments.append(((min_x, y), (max_x, y)))
         left_segments = []
         marked = [False] * len(layer)
@@ -187,6 +192,8 @@ class Map:
                     if layer[cur_idx] in LEFT_BLOCK:
                         marked[cur_idx] = True
                         max_y = cur_y
+                    else:
+                        break
                 left_segments.append(((x, min_y), (x, max_y)))
         right_segments = []
         marked = [False] * len(layer)
@@ -204,6 +211,8 @@ class Map:
                     if layer[cur_idx] in RIGHT_BLOCK:
                         marked[cur_idx] = True
                         max_y = cur_y
+                    else:
+                        break
                 right_segments.append(((x, min_y), (x, max_y)))
         down_segments = []
         marked = [False] * len(layer)
@@ -221,6 +230,8 @@ class Map:
                     if layer[cur_idx] in DOWN_BLOCK:
                         marked[cur_idx] = True
                         max_x = cur_x
+                    else:
+                        break
                 down_segments.append(((min_x, y), (max_x, y)))
         return up_segments, down_segments, left_segments, right_segments
 
@@ -249,6 +260,12 @@ class BasePhysicsSprite(BaseSprite):
         self.game = game
         self.body: pymunk.Body = None
         self.shape: pymunk.Shape = None
+
+    def update(self, now):
+        super().update(now)
+        if self.body.position.y > MAP_HEIGHT * TILE_HEIGHT * SCALE + 100:
+            self.kill()
+            self.game.space.remove(self.body, *self.body.shapes)
 
     def get_rect(self):
         return self.surface.get_surface().get_rect(center=self.body.position)
@@ -562,6 +579,13 @@ class Apple(Fruit):
         self.surface.set_state(AppleSurface.IDLE_STATE)
 
 
+class Banana(Fruit):
+    def __init__(self, game, position):
+        super().__init__(game, position)
+        self.surface = BananaSurface()
+        self.surface.set_state(BananaSurface.IDLE_STATE)
+
+
 class Player(BasePhysicsSprite):
     def __init__(self, game):
         super().__init__(game)
@@ -628,6 +652,10 @@ class Player(BasePhysicsSprite):
 
     def update(self, now):
         super().update(now)
+        if self.body.position.y > MAP_HEIGHT * TILE_HEIGHT * SCALE + 100:
+            self.game.game_over()
+            return
+
         if self.is_grabbing:
             self.grab_object.body.position = self.body.position.x, self.body.position.y - PLAYER_BOX_HEIGHT * PLAYER_SCALE
             self.grab_object.body.velocity = (0, 0)

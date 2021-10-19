@@ -101,6 +101,23 @@ class AppleSurface(BaseSurface):
             pg.Rect(image_id * FRUIT_SCALE * FRUIT_WIDTH, 0, FRUIT_SCALE * FRUIT_WIDTH, FRUIT_SCALE * FRUIT_HEIGHT))
 
 
+class BananaSurface(BaseSurface):
+    IDLE_STATE = 1
+
+    def __init__(self):
+        super().__init__()
+        self.image = load_image("assets\\Fruits\\Bananas.png", True, None, FRUIT_SCALE, FRUIT_SCALE)
+        self.images = {
+            BaseSurface.DEFAULT_STATE: NoAnimation(self.get_sub_surface(0)),
+            BananaSurface.IDLE_STATE: Animation(
+                [self.get_sub_surface(x) for x in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]])
+        }
+
+    def get_sub_surface(self, image_id):
+        return self.image.subsurface(
+            pg.Rect(image_id * FRUIT_SCALE * FRUIT_WIDTH, 0, FRUIT_SCALE * FRUIT_WIDTH, FRUIT_SCALE * FRUIT_HEIGHT))
+
+
 class HeartSurface(BaseSurface):
     def __init__(self):
         super().__init__()
