@@ -48,6 +48,7 @@ from src.common.config import BOX_BOX_WIDTH
 from src.common.config import BOX_BOX_HEIGHT
 from src.common.config import PLAYER_COLLISION_TYPE
 from src.common.config import UP_SEGMENT_COLLISION_TYPE
+from src.common.config import WALL_COLLISION_TYPE
 from src.common.config import PLAYER_ATTACK_RECT_WIDTH
 from src.common.config import PLAYER_ATTACK_RECT_HEIGHT
 from src.common.common_objects import BaseSprite
@@ -82,11 +83,13 @@ class Map:
                     body = pymunk.Body(body_type=pymunk.Body.STATIC)
                     shape = pymunk.Segment(body=body, a=(x_min * TILE_WIDTH * SCALE, (y + 1) * TILE_WIDTH * SCALE), b=((x_max + 1) * TILE_WIDTH * SCALE, (y + 1) * TILE_WIDTH * SCALE), radius=1)
                     shape.elasticity = 0.0
+                    shape.collision_type = WALL_COLLISION_TYPE
                     game.space.add(body, shape)
                 for (x, y_min), (x, y_max) in left:
                     body = pymunk.Body(body_type=pymunk.Body.STATIC)
                     shape = pymunk.Segment(body=body, a=(x * TILE_WIDTH * SCALE, y_min * TILE_WIDTH * SCALE), b=(x * TILE_WIDTH * SCALE, (y_max + 1) * TILE_WIDTH * SCALE), radius = 1)
                     shape.elasticity = 0.0
+                    shape.collision_type = WALL_COLLISION_TYPE
                     game.space.add(body, shape)
                 for (x, y_min), (x, y_max) in right:
                     body = pymunk.Body(body_type=pymunk.Body.STATIC)
@@ -298,10 +301,6 @@ class Box(BasePhysicsSprite):
         self.body.position = position
         self.shape = pymunk.Poly.create_box(body=self.body,
                                             size=(BOX_BOX_WIDTH * BOX_SCALE, BOX_BOX_HEIGHT * BOX_SCALE))
-        # self.up_segment_shape = pymunk.Segment(body=self.body, a=(-BOX_BOX_WIDTH * BOX_SCALE /2, -BOX_BOX_HEIGHT * BOX_SCALE/2 - 1), b=(BOX_BOX_WIDTH * BOX_SCALE/2, -BOX_BOX_HEIGHT * BOX_SCALE/2 - 1), radius=1)
-        # self.up_segment_shape.collision_type = UP_SEGMENT_COLLISION_TYPE
-        # self.up_segment_shape.elasticity = 0.0
-        # self.up_segment_shape.mass = 0.0
         game.space.add(self.body, self.shape)
         self.shape.collision_type = UP_SEGMENT_COLLISION_TYPE
         self.shape.elasticity = 0
@@ -350,13 +349,17 @@ class Slime(BasePhysicsSprite):
         game.space.add(self.body, self.shape)
         self.shape.collision_type = Slime.ID
         self.shape.elasticity = 0
-        self.shape.mass = 1000000
+        self.shape.mass = 2
         self.collision_handler = game.space.add_collision_handler(PLAYER_COLLISION_TYPE, Slime.ID)
         self.collision_handler.begin = self.handler
         self.collision_handler.data["slime"] = self
+        self.slime_collision = game.space.add_collision_handler(Slime.ID, Slime.ID)
+        self.slime_collision.begin = self.slime_begin_handler
         self.state = None
         self.hp = hp
-        Slime.ID = Slime.ID + 1
+
+    def slime_begin_handler(self, space, arbiter, data):
+        return False
 
     def handler(self, space, arbiter, data):
         collide_vector = self.game.player.body.position - data["slime"].body.position
@@ -392,6 +395,54 @@ class BlueSlime(Slime):
         super().__init__(game, position)
         self.surface = SlimeSurface()
         self.set_state(SlimeSurface.IDLE_STATE)
+        self.face_right = False
+        self.ai = BlueSlimeAI(game, self)
+
+    def move_left(self):
+        self.face_right = False
+        self.body.velocity = (-15, self.body.velocity.y)
+        self.surface.set_flip(True)
+
+    def move_right(self):
+        self.face_right = True
+        self.body.velocity = (15, self.body.velocity.y)
+        self.surface.set_flip(False)
+
+    def stop_moving(self):
+        self.body.velocity = (0, self.body.velocity.y)
+
+    def update(self, now):
+        super().update(now)
+        self.ai.update(now)
+
+
+class BlueSlimeAI:
+    def __init__(self, game, slime):
+        self.game = game
+        self.slime = slime
+        self.turn_duration = 2
+        self.last_x_position = self.slime.body.position[0]
+
+    def update(self, now):
+        self.turn_duration = self.turn_duration - 1
+        if self.slime.state in [SlimeSurface.HIT_STATE]:
+            self.slime.stop_moving()
+            return
+
+        if self.turn_duration > 0:
+            if self.slime.face_right:
+                self.slime.move_right()
+            else:
+                self.slime.move_left()
+        else:
+            self.turn_duration = 10
+            current_x_position = self.slime.body.position[0]
+            if abs(self.last_x_position - current_x_position) < 0.1:
+                if self.slime.face_right:
+                    self.slime.move_left()
+                else:
+                    self.slime.move_right()
+            self.last_x_position = current_x_position
 
 
 class Apple(Fruit):
@@ -405,7 +456,7 @@ class Player(BasePhysicsSprite):
     def __init__(self, game):
         super().__init__(game)
         self.body = pymunk.Body(body_type=pymunk.Body.DYNAMIC)
-        self.body.position = (170, 300)
+        self.body.position = (870, 300)
         self.shape = pymunk.Poly.create_box(body=self.body, size=(PLAYER_BOX_WIDTH * PLAYER_SCALE, PLAYER_BOX_HEIGHT * PLAYER_SCALE))
         self.shape.elasticity = 0.0
         self.shape.collision_type = PLAYER_COLLISION_TYPE
