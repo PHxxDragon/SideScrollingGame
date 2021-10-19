@@ -70,6 +70,7 @@ class Map:
         self.layers = []
         self.body_shape = []
         self.target_groups = []
+        self.grab_groups = []
         for layer in layers_data:
             if layer["name"] in ["Terrain"]:
                 group = pg.sprite.Group()
@@ -83,6 +84,7 @@ class Map:
                     body = pymunk.Body(body_type=pymunk.Body.STATIC)
                     shape = pymunk.Segment(body=body, a=(x_min * TILE_WIDTH * SCALE, y * TILE_WIDTH * SCALE), b=((x_max + 1) * TILE_WIDTH * SCALE, y * TILE_WIDTH * SCALE), radius=1)
                     shape.elasticity = 0.0
+                    shape.friction = 0.7
                     shape.collision_type = UP_SEGMENT_COLLISION_TYPE
                     game.space.add(body, shape)
                 for (x_min, y), (x_max, _) in down:
@@ -130,6 +132,7 @@ class Map:
                         group.add(Box(game, (SCALE * (obj["x"] + BOX_WIDTH/2), SCALE * (obj["y"] - BOX_HEIGHT/2)), item=item))
                 self.layers.append(group)
                 self.target_groups.append(group)
+                self.grab_groups.append(group)
             if layer["name"] in ["Items"]:
                 group = pg.sprite.Group()
                 for obj in layer["objects"]:
@@ -314,6 +317,7 @@ class Box(BasePhysicsSprite):
         self.shape.collision_type = UP_SEGMENT_COLLISION_TYPE
         self.shape.elasticity = 0
         self.shape.mass = 2
+        self.shape.friction = 0.7
         self.state = None
         self.hp = hp
         self.surface = BoxSurface()
@@ -575,6 +579,9 @@ class Player(BasePhysicsSprite):
         self.double_jumped = False
         self.power_up = False
         self.power_up_duration = 0
+        self.is_grabbing = False
+        self.grab_object = None
+        self.force = 10
 
     def power_up_func(self, duration=1000):
         self.power_up = True
@@ -615,6 +622,9 @@ class Player(BasePhysicsSprite):
 
     def update(self, now):
         super().update(now)
+        if self.is_grabbing:
+            self.grab_object.body.position = self.body.position.x, self.body.position.y - PLAYER_BOX_HEIGHT * PLAYER_SCALE
+            self.grab_object.body.velocity = (0, 0)
 
         if self.state in [PlayerSurface.ATTACK_STATE, PlayerSurface.STRONG_ATTACK_STATE]:
             if self.face_right:
@@ -665,6 +675,30 @@ class Player(BasePhysicsSprite):
 
     def leave_ground(self):
         self.on_ground = self.on_ground - 1
+
+    def grab(self):
+        if not self.is_grabbing:
+            for sprite in self.game.grab.sprites():
+                if (self.body.position - sprite.body.position).length < 40:
+                    sprite.body.position = self.body.position.x, self.body.position.y - PLAYER_BOX_HEIGHT * PLAYER_SCALE
+                    self.is_grabbing = True
+                    self.grab_object = sprite
+                    self.game.space.remove(sprite.body, *sprite.body.shapes)
+                    break
+
+    def charge_throw(self):
+        if self.is_grabbing:
+            self.force = self.force + 1
+            if self.force >= 100:
+                self.force = 100
+
+    def throw(self):
+        if self.is_grabbing:
+            self.is_grabbing = False
+            self.game.space.add(self.grab_object.body, *self.grab_object.body.shapes)
+            self.grab_object.body.velocity = ((1 if self.face_right else -1) * self.force, -1 * self.force)
+            self.grab_object = None
+            self.force = 10
 
     def reach_ground(self):
         if self.state in [PlayerSurface.JUMP_UP_STATE, PlayerSurface.DOUBLE_JUMP_STATE]:

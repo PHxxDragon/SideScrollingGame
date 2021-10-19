@@ -31,6 +31,7 @@ class Game(State):
         self.score = None
         self.to_title_btn = None
         self.target = None
+        self.grab = None
         self.pause_ui = None
         self.game_over_ui = None
         self.item_spawner = None
@@ -47,6 +48,7 @@ class Game(State):
         self.ui = pg.sprite.Group()
         self.pause_ui = pg.sprite.Group()
         self.target = pg.sprite.Group()
+        self.grab = pg.sprite.Group()
         self.game_over_ui = pg.sprite.Group()
         self.space = pymunk.Space()
         self.space.gravity = (0, 10)
@@ -65,6 +67,8 @@ class Game(State):
             self.group_all.add(*group.sprites())
         for group in self.map.target_groups:
             self.target.add(*group)
+        for group in self.map.grab_groups:
+            self.grab.add(*group)
         self.group_all.add(self.player)
         self.ui.add(self.score)
         self.ui.add(self.hp_bar)
@@ -119,6 +123,11 @@ class Game(State):
                         self.player.attack()
                     elif event.key == pygame.K_ESCAPE:
                         self.pause = True
+                    elif event.key == pygame.K_d:
+                        self.player.grab()
+                elif event.type == pg.KEYUP:
+                    if event.key == pygame.K_f:
+                        self.player.throw()
         elif self.pause:
             for event in events:
                 if event.type == pg.MOUSEBUTTONDOWN:
@@ -143,6 +152,9 @@ class Game(State):
                 self.player.move_right()
             else:
                 self.player.stop_moving()
+
+            if keyboard[pg.K_f]:
+                self.player.charge_throw()
 
     def draw(self, surface: pg.Surface, interpolate):
         big_surface = pg.Surface((4096, 512), pygame.SRCALPHA)
