@@ -7,6 +7,7 @@ from src.state.game.game_objects import Player
 from src.state.game.game_objects import Map
 from src.state.game.game_objects import Camera
 from src.state.game.game_objects import ItemSpawner
+from src.sound.sound import music
 from src.common.common_objects import BackGround
 from src.common.common_objects import HpBar
 from src.common.common_objects import Button
@@ -76,10 +77,14 @@ class Game(State):
         self.is_game_over = False
 
     def game_over(self):
+        music.load("game-over.mp3")
+        music.start()
         self.is_game_over = True
 
     def startup(self, now, to_persist):
         super().startup(now, to_persist)
+        music.load("field.mp3")
+        music.start()
         self.reset()
 
     def cleanup(self):

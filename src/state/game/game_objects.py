@@ -6,10 +6,10 @@ from src.surface.surfaces import AppleSurface
 from src.surface.surfaces import HeartSurface
 from src.surface.surfaces import SlimeSurface
 from src.surface.surfaces import BoxSurface
-from src.surface.surfaces import PotionBarSurface
 from src.surface.surfaces import PotionSurface
 from src.surface.surfaces import Terrain
 from src.common.map_loader import load_map
+from src.sound.sound import sound
 from src.common.config import SCREEN_WIDTH
 from src.common.config import SCREEN_HEIGHT
 from src.common.config import TILE_WIDTH
@@ -255,6 +255,7 @@ class Fruit(BasePhysicsSprite):
     def handler(self, space, arbiter, data):
         self.game.player.eat()
         self.game.space.remove(self.body, self.shape)
+        sound.play_sound("fruit.wav")
         self.kill()
         return False
 
@@ -270,6 +271,7 @@ class PotionItem(Fruit):
     def handler(self, space, arbiter, data):
         self.game.player.power_up_func()
         self.game.space.remove(self.body, self.shape)
+        sound.play_sound("power-up.mp3")
         self.kill()
         return False
 
@@ -282,6 +284,7 @@ class HeartItem(Fruit):
     def handler(self, space, arbiter, data):
         self.game.hp_bar.increase_hp(1)
         self.game.space.remove(self.body, self.shape)
+        sound.play_sound("heal.mp3")
         self.kill()
         return False
 
@@ -319,10 +322,12 @@ class Box(BasePhysicsSprite):
                     if self.item is not None:
                         self.game.item_spawner.spawn_item(self.item, self.body.position)
                     self.kill()
+                sound.play_sound("break.mp3.flac")
                 self.set_state(BoxSurface.BREAK_STATE, callback2)
             else:
                 self.set_state(BoxSurface.IDLE_STATE)
 
+        sound.play_sound("hit.mp3.flac")
         self.set_state(BoxSurface.HIT_STATE, callback)
 
     def set_state(self, state, callback=None):
@@ -362,6 +367,8 @@ class Slime(BasePhysicsSprite):
     def get_hit(self, damage=1):
         if self.state in [SlimeSurface.HIT_STATE]:
             return
+
+        sound.play_sound("slime-hit.mp3")
 
         def callback():
             self.hp = self.hp - damage
@@ -448,8 +455,10 @@ class Player(BasePhysicsSprite):
             self.set_state(PlayerSurface.IDLE_STATE)
 
         if self.power_up:
+            sound.play_sound("strong-cut.wav")
             self.set_state(PlayerSurface.STRONG_ATTACK_STATE, callback)
         else:
+            sound.play_sound("cut.mp3")
             self.set_state(PlayerSurface.ATTACK_STATE, callback)
 
     def update(self, now):
@@ -481,6 +490,8 @@ class Player(BasePhysicsSprite):
     def get_hit(self, collide_vector=None):
         if self.state in [PlayerSurface.HIT, PlayerSurface.IMMUNE]:
             return
+
+        sound.play_sound("player-hit.mp3")
 
         if not self.game.hp_bar.decrease_hp(1):
             self.game.game_over()

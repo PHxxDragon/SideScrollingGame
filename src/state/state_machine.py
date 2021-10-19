@@ -62,6 +62,7 @@ class StateMachine:
         """
         self.state_dict = state_dict
         self.state = state_dict[start_state]
+        self.state.startup(0, {})
 
     def update(self, now, mouse_pos, keyboard):
         """

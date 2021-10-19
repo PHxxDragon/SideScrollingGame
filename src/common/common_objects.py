@@ -4,11 +4,13 @@ from src.surface.surfaces import BackgroundSurface
 from src.surface.surfaces import HpBarSurface
 from src.surface.surfaces import PotionBarSurface
 from src.surface.surfaces import TextSurface
+from src.sound.sound import sound
 from src.common.config import SCALE
 from src.common.config import TILE_WIDTH
 from src.common.config import TILE_HEIGHT
 from src.common.config import SCREEN_WIDTH
 from src.common.config import MAX_HP
+
 
 class BaseSprite(pg.sprite.Sprite):
     def __init__(self, state=None):
@@ -63,6 +65,7 @@ class Button(BaseSprite):
 
     def click(self, mouse_pos):
         if self.get_rect().collidepoint(mouse_pos) and self.function is not None:
+            sound.play_sound("menu-click.mp3")
             self.function()
 
     def get_rect(self):

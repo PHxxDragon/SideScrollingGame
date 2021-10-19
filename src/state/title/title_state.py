@@ -4,6 +4,7 @@ import pygame.time
 from src.state.state_machine import State
 from src.common.common_objects import BackGround
 from src.state.title.title_objects import Map
+from src.sound.sound import music
 from src.common.common_objects import Button
 from src.common.common_objects import Text
 from src.common.config import SCREEN_WIDTH
@@ -50,6 +51,8 @@ class TitleScreen(State):
 
     def startup(self, now, to_persist):
         super().startup(now, to_persist)
+        music.load("title.mp3")
+        music.start()
         self.reset()
 
     def cleanup(self):
