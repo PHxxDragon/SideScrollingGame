@@ -330,7 +330,6 @@ class Box(BasePhysicsSprite):
         super().update(now)
 
         if self.is_throwing:
-            print("aaa")
             if self.stop_throw_frames <= 0:
                 self.stop_throw_frames = 3
                 if abs(self.last_y_position - self.body.position.y) < 0.5:
@@ -338,7 +337,6 @@ class Box(BasePhysicsSprite):
                 self.last_y_position = self.body.position.y
             else:
                 self.stop_throw_frames = self.stop_throw_frames - 1
-
 
     def get_hit(self, damage=1):
         def callback():

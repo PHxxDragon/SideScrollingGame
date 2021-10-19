@@ -8,7 +8,6 @@ from src.state.game.game_objects import Map
 from src.state.game.game_objects import Camera
 from src.state.game.game_objects import ItemSpawner
 from src.sound.sound import music
-from src.sound.sound import sound
 from src.common.common_objects import BackGround
 from src.common.common_objects import HpBar
 from src.common.common_objects import Button
@@ -48,6 +47,7 @@ class Game(State):
         self.game_over_text = None
         self.player_fruit_collision_handler = None
         self.player_slime_collision_handler = None
+        self.thrown_box_slime_collision_handler = None
         self.reset()
 
     def reset(self):
@@ -95,6 +95,19 @@ class Game(State):
 
         self.player_slime_collision_handler = self.space.add_collision_handler(PLAYER_COLLISION_TYPE, SLIME_COLLISION_TYPE)
         self.player_slime_collision_handler.begin = self.player_slime_collision_handler_begin
+
+        self.thrown_box_slime_collision_handler = self.space.add_collision_handler(THROW_BOX_COLLISION_TYPE, SLIME_COLLISION_TYPE)
+        self.thrown_box_slime_collision_handler.begin = self.thrown_box_slime_collision_handler_begin
+
+    @staticmethod
+    def thrown_box_slime_collision_handler_begin(space, arbiter, data):
+        box = space.shapes[0].body.sprite
+        slime = space.shapes[1].body.sprite
+        if box.is_throwing:
+            box.get_hit(1)
+            slime.get_hit(2)
+            box.is_throwing = False
+        return True
 
     @staticmethod
     def player_slime_collision_handler_begin(space, arbiter, data):

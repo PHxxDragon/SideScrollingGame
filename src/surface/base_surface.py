@@ -68,8 +68,8 @@ class BaseSurface:
         self.states = [BaseSurface.DEFAULT_STATE]
         self.state = BaseSurface.DEFAULT_STATE
         self.default_state = BaseSurface.DEFAULT_STATE
+        self.surface = pg.Surface((0, 0))
         self.images = None
-        self.surface = None
         self.callback = None
         self.flip = False
 
