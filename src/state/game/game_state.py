@@ -8,6 +8,7 @@ from src.state.game.game_objects import Map
 from src.state.game.game_objects import Camera
 from src.state.game.game_objects import ItemSpawner
 from src.sound.sound import music
+from src.sound.sound import sound
 from src.common.common_objects import BackGround
 from src.common.common_objects import HpBar
 from src.common.common_objects import Button
@@ -15,7 +16,8 @@ from src.common.common_objects import PotionBar
 from src.common.common_objects import Text
 from src.common.config import SCREEN_WIDTH
 from src.common.config import SCREEN_HEIGHT
-
+from src.common.config import PLAYER_COLLISION_TYPE
+from src.common.config import FRUIT_COLLISION_TYPE
 
 class Game(State):
     def __init__(self):
@@ -41,6 +43,7 @@ class Game(State):
         self.pause = False
         self.is_game_over = False
         self.game_over_text = None
+        self.player_fruit_collision_handler = None
         self.reset()
 
     def reset(self):
@@ -79,6 +82,15 @@ class Game(State):
         self.game_over_ui.add(self.to_title_btn)
         self.pause = False
         self.is_game_over = False
+
+        self.player_fruit_collision_handler = self.space.add_collision_handler(PLAYER_COLLISION_TYPE, FRUIT_COLLISION_TYPE)
+        self.player_fruit_collision_handler.begin = self.player_fruit_collision_handler_begin
+
+    @staticmethod
+    def player_fruit_collision_handler_begin(space, arbiter, data):
+        fruit = space.shapes[1].body.sprite
+        fruit.eat()
+        return False
 
     def game_over(self):
         music.load("game-over.mp3")

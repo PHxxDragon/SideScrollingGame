@@ -253,26 +253,21 @@ class BasePhysicsSprite(BaseSprite):
 
 
 class Fruit(BasePhysicsSprite):
-    ID = 10000
-
     def __init__(self, game, position, box_width=FRUIT_BOX_WIDTH, box_height=FRUIT_BOX_HEIGHT, scale=FRUIT_SCALE):
         super().__init__(game)
         self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        self.body.sprite = self
         self.body.position = position
         self.shape = pymunk.Poly.create_box(body=self.body, size=(box_width * scale, box_height * scale))
         game.space.add(self.body, self.shape)
-        self.shape.collision_type = Fruit.ID
+        self.shape.collision_type = FRUIT_COLLISION_TYPE
         self.shape.sensor = True
-        self.collision_handler = game.space.add_collision_handler(PLAYER_COLLISION_TYPE, Fruit.ID)
-        self.collision_handler.begin = self.handler
-        Fruit.ID = Fruit.ID + 1
 
-    def handler(self, space, arbiter, data):
+    def eat(self):
         self.game.player.eat()
-        self.game.space.remove(self.body, self.shape)
+        self.game.space.remove(self.body, *self.body.shapes)
         sound.play_sound("fruit.wav")
         self.kill()
-        return False
 
     def get_rect(self):
         return self.surface.get_surface().get_rect(center=self.body.position)
@@ -283,12 +278,11 @@ class PotionItem(Fruit):
         super().__init__(game, position, POTION_BOX_WIDTH, POTION_BOX_HEIGHT, POTION_SCALE)
         self.surface = PotionSurface()
 
-    def handler(self, space, arbiter, data):
+    def eat(self):
+        self.game.space.remove(self.body, *self.body.shapes)
         self.game.player.power_up_func()
-        self.game.space.remove(self.body, self.shape)
         sound.play_sound("power-up.mp3")
         self.kill()
-        return False
 
 
 class HeartItem(Fruit):
@@ -296,12 +290,11 @@ class HeartItem(Fruit):
         super().__init__(game, position)
         self.surface = HeartSurface()
 
-    def handler(self, space, arbiter, data):
+    def eat(self):
         self.game.hp_bar.increase_hp(1)
-        self.game.space.remove(self.body, self.shape)
+        self.game.space.remove(self.body, *self.body.shapes)
         sound.play_sound("heal.mp3")
         self.kill()
-        return False
 
 
 class Box(BasePhysicsSprite):
@@ -561,7 +554,8 @@ class Player(BasePhysicsSprite):
     def __init__(self, game):
         super().__init__(game)
         self.body = pymunk.Body(body_type=pymunk.Body.DYNAMIC)
-        self.body.position = (870, 300)
+        self.body.sprite = self
+        self.body.position = (170, 300)
         self.shape = pymunk.Poly.create_box(body=self.body, size=(PLAYER_BOX_WIDTH * PLAYER_SCALE, PLAYER_BOX_HEIGHT * PLAYER_SCALE))
         self.shape.elasticity = 0.0
         self.shape.collision_type = PLAYER_COLLISION_TYPE
