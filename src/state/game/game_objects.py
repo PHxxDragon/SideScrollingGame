@@ -56,6 +56,7 @@ from src.common.config import UP_SEGMENT_COLLISION_TYPE
 from src.common.config import WALL_COLLISION_TYPE
 from src.common.config import PLAYER_ATTACK_RECT_WIDTH
 from src.common.config import PLAYER_ATTACK_RECT_HEIGHT
+from src.common.config import THROW_BOX_COLLISION_TYPE
 from src.common.config import FRUIT_COLLISION_TYPE
 from src.common.config import SLIME_COLLISION_TYPE
 from src.common.common_objects import BaseSprite
@@ -299,16 +300,23 @@ class HeartItem(Fruit):
 
 
 class Box(BasePhysicsSprite):
-    ID = 30000
 
     def __init__(self, game, position, hp=2, item=None):
         super().__init__(game)
         self.body = pymunk.Body(body_type=pymunk.Body.DYNAMIC)
         self.body.position = position
+        self.body.sprite = self
         self.shape = pymunk.Poly.create_box(body=self.body,
                                             size=(BOX_BOX_WIDTH * BOX_SCALE, BOX_BOX_HEIGHT * BOX_SCALE))
-        game.space.add(self.body, self.shape)
+        self.shape2 = pymunk.Poly.create_box(body=self.body,
+                                            size=(BOX_BOX_WIDTH * BOX_SCALE, BOX_BOX_HEIGHT * BOX_SCALE))
+        game.space.add(self.body, self.shape, self.shape2)
         self.shape.collision_type = UP_SEGMENT_COLLISION_TYPE
+        self.shape2.collision_type = THROW_BOX_COLLISION_TYPE
+        self.shape2.sensor = True
+        self.is_throwing = False
+        self.stop_throw_frames = 0
+        self.last_y_position = -1
         self.shape.elasticity = 0
         self.shape.mass = 2
         self.shape.friction = 0.7
@@ -317,7 +325,20 @@ class Box(BasePhysicsSprite):
         self.surface = BoxSurface()
         self.set_state(BoxSurface.IDLE_STATE)
         self.item = item
-        Box.ID = Box.ID + 1
+
+    def update(self, now):
+        super().update(now)
+
+        if self.is_throwing:
+            print("aaa")
+            if self.stop_throw_frames <= 0:
+                self.stop_throw_frames = 3
+                if abs(self.last_y_position - self.body.position.y) < 0.5:
+                    self.is_throwing = False
+                self.last_y_position = self.body.position.y
+            else:
+                self.stop_throw_frames = self.stop_throw_frames - 1
+
 
     def get_hit(self, damage=1):
         def callback():
@@ -668,14 +689,15 @@ class Player(BasePhysicsSprite):
     def charge_throw(self):
         if self.is_grabbing:
             self.force = self.force + 1
-            if self.force >= 100:
-                self.force = 100
+            if self.force >= 50:
+                self.force = 50
 
     def throw(self):
         if self.is_grabbing:
             self.is_grabbing = False
             self.game.space.add(self.grab_object.body, *self.grab_object.body.shapes)
             self.grab_object.body.velocity = ((1 if self.face_right else -1) * self.force, -1 * self.force)
+            self.grab_object.is_throwing = True
             self.grab_object = None
             self.force = 10
 

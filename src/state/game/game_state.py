@@ -19,6 +19,7 @@ from src.common.config import SCREEN_HEIGHT
 from src.common.config import PLAYER_COLLISION_TYPE
 from src.common.config import FRUIT_COLLISION_TYPE
 from src.common.config import SLIME_COLLISION_TYPE
+from src.common.config import THROW_BOX_COLLISION_TYPE
 
 class Game(State):
     def __init__(self):
