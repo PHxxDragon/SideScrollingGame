@@ -315,6 +315,7 @@ class Box(BasePhysicsSprite):
         self.shape2.collision_type = THROW_BOX_COLLISION_TYPE
         self.shape2.sensor = True
         self.is_throwing = False
+        self.is_grabbing = False
         self.stop_throw_frames = 0
         self.last_y_position = -1
         self.shape.elasticity = 0
@@ -326,24 +327,27 @@ class Box(BasePhysicsSprite):
         self.set_state(BoxSurface.IDLE_STATE)
         self.item = item
 
-    def update(self, now):
-        super().update(now)
-
-        if self.is_throwing:
-            if self.stop_throw_frames <= 0:
-                self.stop_throw_frames = 3
-                if abs(self.last_y_position - self.body.position.y) < 0.5:
-                    self.is_throwing = False
-                self.last_y_position = self.body.position.y
-            else:
-                self.stop_throw_frames = self.stop_throw_frames - 1
+    # def update(self, now):
+    #     super().update(now)
+    #
+    #     if self.is_throwing:
+    #         if self.stop_throw_frames <= 0:
+    #             self.stop_throw_frames = 3
+    #             if abs(self.last_y_position - self.body.position.y) < 0.5:
+    #                 self.is_throwing = False
+    #             self.last_y_position = self.body.position.y
+    #         else:
+    #             self.stop_throw_frames = self.stop_throw_frames - 1
 
     def get_hit(self, damage=1):
+        if self.is_grabbing:
+            return
+
         def callback():
             self.hp = self.hp - damage
             if self.hp <= 0:
                 def callback2():
-                    self.game.space.remove(self.body, self.shape)
+                    self.game.space.remove(self.body, *self.body.shapes)
                     if self.item is not None:
                         self.game.item_spawner.spawn_item(self.item, self.body.position)
                     self.kill()
@@ -681,6 +685,7 @@ class Player(BasePhysicsSprite):
                     sprite.body.position = self.body.position.x, self.body.position.y - PLAYER_BOX_HEIGHT * PLAYER_SCALE
                     self.is_grabbing = True
                     self.grab_object = sprite
+                    self.grab_object.is_grabbing = True
                     self.game.space.remove(sprite.body, *sprite.body.shapes)
                     break
 
@@ -696,6 +701,7 @@ class Player(BasePhysicsSprite):
             self.game.space.add(self.grab_object.body, *self.grab_object.body.shapes)
             self.grab_object.body.velocity = ((1 if self.face_right else -1) * self.force, -1 * self.force)
             self.grab_object.is_throwing = True
+            self.grab_object.is_grabbing = False
             self.grab_object = None
             self.force = 10
 

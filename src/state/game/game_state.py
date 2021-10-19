@@ -19,6 +19,7 @@ from src.common.config import PLAYER_COLLISION_TYPE
 from src.common.config import FRUIT_COLLISION_TYPE
 from src.common.config import SLIME_COLLISION_TYPE
 from src.common.config import THROW_BOX_COLLISION_TYPE
+from src.common.config import UP_SEGMENT_COLLISION_TYPE
 
 class Game(State):
     def __init__(self):
@@ -48,6 +49,7 @@ class Game(State):
         self.player_fruit_collision_handler = None
         self.player_slime_collision_handler = None
         self.thrown_box_slime_collision_handler = None
+        self.thrown_box_up_segment_handler = None
         self.reset()
 
     def reset(self):
@@ -98,6 +100,16 @@ class Game(State):
 
         self.thrown_box_slime_collision_handler = self.space.add_collision_handler(THROW_BOX_COLLISION_TYPE, SLIME_COLLISION_TYPE)
         self.thrown_box_slime_collision_handler.begin = self.thrown_box_slime_collision_handler_begin
+
+        self.thrown_box_up_segment_handler = self.space.add_collision_handler(THROW_BOX_COLLISION_TYPE, UP_SEGMENT_COLLISION_TYPE)
+        self.thrown_box_up_segment_handler.begin = self.thrown_box_up_segment_handler_begin
+
+    @staticmethod
+    def thrown_box_up_segment_handler_begin(space, arbiter, data):
+        box = space.shapes[0].body.sprite
+        if box.is_throwing:
+            box.is_throwing = False
+        return True
 
     @staticmethod
     def thrown_box_slime_collision_handler_begin(space, arbiter, data):
