@@ -348,7 +348,7 @@ class Box(BasePhysicsSprite):
         self.last_y_position = -1
         self.shape.elasticity = 0
         self.shape.mass = 2
-        self.shape.friction = 0.7
+        self.shape.friction = 1.3
         self.state = None
         self.hp = hp
         self.surface = BoxSurface()
