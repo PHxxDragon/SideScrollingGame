@@ -21,6 +21,7 @@ class TitleScreen(State):
         self.option_ui = None
         self.background = None
         self.title = None
+        self.title_shadow = None
         self.new_game_btn = None
         self.option_btn = None
         self.exit_btn = None
@@ -44,7 +45,8 @@ class TitleScreen(State):
         self.main_ui = pg.sprite.Group()
         self.map = Map(self)
         self.background = BackGround()
-        self.title = Text((SCREEN_WIDTH/2, SCREEN_HEIGHT * 2/8), "Herororo", "midtop")
+        self.title = Text((SCREEN_WIDTH/2, SCREEN_HEIGHT * 2/8), "Herororo", "midtop", 80, "SportypoReguler-OVGwe.ttf")
+        self.title_shadow = Text((SCREEN_WIDTH/2 + 10, SCREEN_HEIGHT * 2/8 + 10), "Herororo", "midtop", 80, "SportypoReguler-OVGwe.ttf", (10, 10, 10))
         self.new_game_btn = Button((SCREEN_WIDTH/2, SCREEN_HEIGHT * 4/8), "New game", "midtop", self.new_game)
         self.option_btn = Button((SCREEN_WIDTH / 2, SCREEN_HEIGHT * 5/8), "Options", "midtop", self.option_handler)
         self.exit_btn = Button((SCREEN_WIDTH / 2, SCREEN_HEIGHT * 6/8), "Exit", "midtop", self.exit)
@@ -62,6 +64,7 @@ class TitleScreen(State):
         self.main_ui.add(self.new_game_btn)
         self.main_ui.add(self.option_btn)
         self.main_ui.add(self.exit_btn)
+        self.group_all.add(self.title_shadow)
         self.group_all.add(self.title)
         self.option_ui.add(self.music_volume)
         self.option_ui.add(self.sfx_volume)

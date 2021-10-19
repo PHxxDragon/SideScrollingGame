@@ -37,9 +37,9 @@ class BaseSprite(pg.sprite.Sprite):
 
 
 class Text(BaseSprite):
-    def __init__(self, position, text="", anchor="center"):
+    def __init__(self, position, text="", anchor="center", size=40, font="LemonMilkMediumItalic-d95nl.otf", color=(255, 255, 255)):
         super().__init__()
-        self.surface = TextSurface()
+        self.surface = TextSurface(size=size, font=font, color=color)
         self.surface.set_text(text)
         self.position = position
         self.anchor = anchor
@@ -52,9 +52,9 @@ class Text(BaseSprite):
 
 
 class Button(BaseSprite):
-    def __init__(self, position, text="", anchor="center", function=None):
+    def __init__(self, position, text="", anchor="center", function=None, size=40, font="LemonMilkMediumItalic-d95nl.otf", color=(255,255,255)):
         super().__init__()
-        self.surface = TextSurface()
+        self.surface = TextSurface(size=size, font=font, color=color)
         self.surface.set_text(text)
         self.position = position
         self.anchor = anchor

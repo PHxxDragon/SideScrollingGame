@@ -274,13 +274,15 @@ class PotionSurface(BaseSurface):
 
 
 class TextSurface(BaseSurface):
-    def __init__(self, size=60):
+    def __init__(self, size=60, font=None, color=(255, 255, 255)):
         super().__init__()
-        self.font = pg.font.Font(None, size)
+        font_path = os.path.join(RESOURCE_DIR, "font", font) if font is not None else None
+        self.font = pg.font.Font(font_path, size)
         self.surface = None
+        self.color = color
 
     def set_text(self, text: str):
-        self.surface = self.font.render(text, True, (255, 255, 255))
+        self.surface = self.font.render(text, True, self.color)
 
     def update(self, now):
         pass
