@@ -2,6 +2,7 @@ import pygame as pg
 from src.surface.base_surface import BaseSurface
 from src.surface.surfaces import BackgroundSurface
 from src.surface.surfaces import HpBarSurface
+from src.surface.surfaces import PotionBarSurface
 from src.surface.surfaces import TextSurface
 from src.common.config import SCALE
 from src.common.config import TILE_WIDTH
@@ -79,6 +80,22 @@ class StaticBlock(BaseSprite):
         return self.surface.get_surface().get_rect(topleft=(self.pos_x * TILE_WIDTH * SCALE, self.pos_y * TILE_HEIGHT * SCALE))
 
 
+class PotionBar(BaseSprite):
+    def __init__(self, remain=0, anchor="topright", position=(SCREEN_WIDTH - 10, 50)):
+        super().__init__()
+        self.remain = remain
+        self.position = position
+        self.anchor = anchor
+        self.surface = PotionBarSurface()
+
+    def set_remain(self, remain):
+        self.remain = remain
+        self.surface.set_remain(remain)
+
+    def get_rect(self):
+        return self.surface.get_surface().get_rect(**{self.anchor: self.position})
+
+
 class HpBar(BaseSprite):
     def __init__(self, hp, anchor="topright", position=(SCREEN_WIDTH - 10, 10)):
         super().__init__()
@@ -106,9 +123,6 @@ class HpBar(BaseSprite):
 
     def get_rect(self):
         return self.surface.get_surface().get_rect(**{self.anchor: self.position})
-
-
-
 
 
 class BackGround(BaseSprite):

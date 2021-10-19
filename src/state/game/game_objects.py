@@ -6,6 +6,7 @@ from src.surface.surfaces import AppleSurface
 from src.surface.surfaces import HeartSurface
 from src.surface.surfaces import SlimeSurface
 from src.surface.surfaces import BoxSurface
+from src.surface.surfaces import PotionBarSurface
 from src.surface.surfaces import PotionSurface
 from src.surface.surfaces import Terrain
 from src.common.map_loader import load_map

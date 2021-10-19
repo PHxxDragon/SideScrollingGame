@@ -23,6 +23,8 @@ from src.common.config import BOX_HEIGHT
 from src.common.config import SLIME_WIDTH
 from src.common.config import SLIME_HEIGHT
 from src.common.config import POTION_SCALE
+from src.common.config import POTION_WIDTH
+from src.common.config import POTION_HEIGHT
 from src.common.config import HEART_WIDTH
 from src.common.config import HP_SPACE
 from src.common.config import HEART_HEIGHT
@@ -280,6 +282,38 @@ class HpBarSurface(BaseSurface):
     def set_hp(self, hp):
         self.hp = hp
         self.surface = self.draw_hp_bar()
+
+    def update(self, now):
+        pass
+
+    def get_surface(self) -> pg.Surface:
+        return self.surface
+
+
+class PotionBarSurface(BaseSurface):
+    def __init__(self, div=100):
+        self.div = div
+        self.remain = 0
+        self.potion = load_image("assets\\potion.png", True, None, POTION_SCALE, POTION_SCALE)
+        self.surface = self.draw_potion_bar()
+        self.font = pg.font.Font(None, 40)
+
+    def draw_potion_bar(self):
+        if int(self.remain/self.div) <= 0:
+            return pg.Surface((0, 0))
+
+        text_surface = self.font.render(str(int(self.remain/self.div)), True, (255,255,255))
+        surface_height = max(POTION_HEIGHT * POTION_SCALE, text_surface.get_height())
+        surface = pg.Surface((POTION_WIDTH * POTION_SCALE + HP_SPACE + text_surface.get_width(), surface_height), pg.SRCALPHA)
+        surface.blit(self.potion, (0, 0))
+        surface.blit(text_surface, (POTION_WIDTH * POTION_SCALE + HP_SPACE, (surface_height - text_surface.get_height())/2))
+        return surface
+
+    def set_remain(self, remain):
+        old_remain = self.remain
+        self.remain = remain
+        if int(old_remain/self.div) != int(remain/self.div):
+            self.surface = self.draw_potion_bar()
 
     def update(self, now):
         pass

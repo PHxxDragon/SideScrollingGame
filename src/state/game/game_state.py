@@ -10,6 +10,7 @@ from src.state.game.game_objects import ItemSpawner
 from src.common.common_objects import BackGround
 from src.common.common_objects import HpBar
 from src.common.common_objects import Button
+from src.common.common_objects import PotionBar
 from src.common.common_objects import Text
 from src.common.config import SCREEN_WIDTH
 from src.common.config import SCREEN_HEIGHT
@@ -34,6 +35,7 @@ class Game(State):
         self.item_spawner = None
         self.continue_btn = None
         self.hp_bar = None
+        self.potion_bar = None
         self.pause = False
         self.is_game_over = False
         self.game_over_text = None
@@ -51,6 +53,7 @@ class Game(State):
         self.map = Map(self)
         self.player = Player(self)
         self.camera = Camera(self)
+        self.potion_bar = PotionBar()
         self.background = BackGround()
         self.hp_bar = HpBar(3)
         self.score = Text((10, 10), "score: 0", "topleft")
@@ -64,6 +67,7 @@ class Game(State):
         self.group_all.add(self.player)
         self.ui.add(self.score)
         self.ui.add(self.hp_bar)
+        self.ui.add(self.potion_bar)
         self.pause_ui.add(self.to_title_btn)
         self.pause_ui.add(self.continue_btn)
         self.game_over_ui.add(self.game_over_text)
@@ -125,6 +129,7 @@ class Game(State):
             self.group_all.update(now)
             self.item_spawner.items.update(now)
             self.background.update(now)
+            self.potion_bar.set_remain(self.player.power_up_duration)
             self.space.step(0.2)
             self.camera.update()
             if keyboard[pg.K_LEFT]:
