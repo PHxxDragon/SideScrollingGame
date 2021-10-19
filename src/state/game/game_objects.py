@@ -674,10 +674,12 @@ class Player(BasePhysicsSprite):
 
     def jump(self):
         if self.on_ground > 0:
-            self.set_state(PlayerSurface.JUMP_UP_STATE)
+            if self.state not in [PlayerSurface.IMMUNE, PlayerSurface.HIT]:
+                self.set_state(PlayerSurface.JUMP_UP_STATE)
             self.body.velocity = (self.body.velocity.x, -43)
         elif not self.double_jumped:
-            self.set_state(PlayerSurface.DOUBLE_JUMP_STATE)
+            if self.state not in [PlayerSurface.IMMUNE, PlayerSurface.HIT]:
+                self.set_state(PlayerSurface.DOUBLE_JUMP_STATE)
             self.double_jumped = True
             self.body.velocity = (self.body.velocity.x, -43)
 
