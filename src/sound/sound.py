@@ -5,8 +5,8 @@ PROJECT_DIR = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
 RESOURCE_DIR = os.path.join(PROJECT_DIR, "resources")
 sounds = {}
 
-MUSIC_VOLUME = 0.5
-SOUND_VOLUME = 0.8
+MUSIC_VOLUME = 50
+SOUND_VOLUME = 80
 
 
 class Music:
@@ -20,8 +20,18 @@ class Music:
 
     @staticmethod
     def start():
-        mixer.music.set_volume(MUSIC_VOLUME)
+        mixer.music.set_volume(MUSIC_VOLUME/100)
         mixer.music.play(loops=-1)
+
+    @staticmethod
+    def get_music_volume():
+        return MUSIC_VOLUME
+
+    @staticmethod
+    def set_music_volume(volume):
+        global MUSIC_VOLUME
+        MUSIC_VOLUME = volume
+        mixer.music.set_volume(MUSIC_VOLUME/100)
 
 
 class Sound:
@@ -46,9 +56,18 @@ class Sound:
         return sounds[sound_name]
 
     def play_sound(self, sound_name):
-        sound = self.load_sound(sound_name)
-        sound.set_volume(SOUND_VOLUME)
-        sound.play()
+        sound_ = self.load_sound(sound_name)
+        sound_.set_volume(SOUND_VOLUME/100)
+        sound_.play()
+
+    @staticmethod
+    def get_sound_volume():
+        return SOUND_VOLUME
+
+    @staticmethod
+    def set_sound_volume(volume):
+        global SOUND_VOLUME
+        SOUND_VOLUME = volume
 
 
 music = Music()
