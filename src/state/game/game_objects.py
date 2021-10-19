@@ -260,9 +260,19 @@ class BasePhysicsSprite(BaseSprite):
         self.game = game
         self.body: pymunk.Body = None
         self.shape: pymunk.Shape = None
+        self.max_velocity = 100
 
     def update(self, now):
         super().update(now)
+        if self.body.velocity.x >= self.max_velocity:
+            self.body.velocity = self.max_velocity, self.body.velocity.y
+        if self.body.velocity.x <= -self.max_velocity:
+            self.body.velocity = -self.max_velocity, self.body.velocity.y
+        if self.body.velocity.y >= self.max_velocity:
+            self.body.velocity = self.body.velocity.x, self.max_velocity
+        if self.body.velocity.y <= -self.max_velocity:
+            self.body.velocity = self.body.velocity.x, -self.max_velocity
+
         if self.body.position.y > MAP_HEIGHT * TILE_HEIGHT * SCALE + 100:
             self.kill()
             self.game.space.remove(self.body, *self.body.shapes)
