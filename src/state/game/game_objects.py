@@ -57,6 +57,7 @@ from src.common.config import WALL_COLLISION_TYPE
 from src.common.config import PLAYER_ATTACK_RECT_WIDTH
 from src.common.config import PLAYER_ATTACK_RECT_HEIGHT
 from src.common.config import FRUIT_COLLISION_TYPE
+from src.common.config import SLIME_COLLISION_TYPE
 from src.common.common_objects import BaseSprite
 from src.common.common_objects import StaticBlock
 
@@ -344,35 +345,19 @@ class Box(BasePhysicsSprite):
 
 
 class Slime(BasePhysicsSprite):
-    ID = 20000
-
     def __init__(self, game, position, hp=2, box_width=SLIME_BOX_WIDTH, box_height=SLIME_BOX_HEIGHT, scale=SLIME_SCALE):
         super().__init__(game)
         self.body = pymunk.Body(body_type=pymunk.Body.DYNAMIC)
         self.body.position = position
+        self.body.sprite = self
         self.shape = pymunk.Poly.create_box(body=self.body,
                                             size=(box_width * scale, box_height * scale))
         game.space.add(self.body, self.shape)
-        self.shape.collision_type = Slime.ID
+        self.shape.collision_type = SLIME_COLLISION_TYPE
         self.shape.elasticity = 0
         self.shape.mass = 2
-        self.collision_handler = game.space.add_collision_handler(PLAYER_COLLISION_TYPE, Slime.ID)
-        self.collision_handler.begin = self.handler
-        self.collision_handler.data["slime"] = self
-        self.slime_collision = game.space.add_collision_handler(Slime.ID, Slime.ID)
-        self.slime_collision.begin = self.slime_begin_handler
         self.state = None
         self.hp = hp
-
-    @staticmethod
-    def slime_begin_handler(space, arbiter, data):
-        return False
-
-    def handler(self, space, arbiter, data):
-        collide_vector = self.game.player.body.position - data["slime"].body.position
-        collide_vector = collide_vector / collide_vector.length
-        self.game.player.get_hit(collide_vector)
-        return False
 
     def get_hit(self, damage=1):
         if self.state in [SlimeSurface.HIT_STATE]:
