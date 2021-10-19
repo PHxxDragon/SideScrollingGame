@@ -202,6 +202,32 @@ class SlimeSurface(BaseSurface):
                                              SLIME_SCALE * SLIME_HEIGHT))
 
 
+class BossSurface(BaseSurface):
+    IDLE_STATE = 1
+    ATTACK_STATE = 2
+    HIT_STATE = 3
+
+    def __init__(self):
+        super().__init__()
+        self.image = load_image("assets\\Slime 32x32.png", True, None, SLIME_SCALE, SLIME_SCALE)
+        self.images = {
+            BaseSurface.DEFAULT_STATE: NoAnimation(self.get_sub_surface(0)),
+            SlimeSurface.IDLE_STATE: Animation([self.get_sub_surface(x) for x in [105, 106, 107, 108, 109, 110]]),
+            SlimeSurface.ATTACK_STATE: Animation([self.get_sub_surface(x) for x in [115, 116, 117, 118]],
+                                                 loops=1),
+            SlimeSurface.HIT_STATE: Animation([self.get_sub_surface(x) for x in [119, 120, 121, 122]],
+                                              loops=1),
+        }
+
+    def get_sub_surface(self, image_id):
+        pos_x = image_id % 21
+        pos_y = int(image_id / 21)
+        return self.image.subsurface(pg.Rect(pos_x * SLIME_SCALE * SLIME_WIDTH,
+                                             pos_y * SLIME_SCALE * SLIME_HEIGHT,
+                                             SLIME_SCALE * SLIME_WIDTH,
+                                             SLIME_SCALE * SLIME_HEIGHT))
+
+
 class BoxSurface(BaseSurface):
     IDLE_STATE = 1
     HIT_STATE = 2

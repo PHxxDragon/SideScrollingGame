@@ -1,3 +1,5 @@
+import random
+
 import pygame as pg
 import pymunk
 
@@ -6,6 +8,7 @@ from src.surface.surfaces import AppleSurface
 from src.surface.surfaces import HeartSurface
 from src.surface.surfaces import SlimeSurface
 from src.surface.surfaces import BoxSurface
+from src.surface.surfaces import BossSurface
 from src.surface.surfaces import PotionSurface
 from src.surface.surfaces import Terrain
 from src.common.map_loader import load_map
@@ -29,6 +32,8 @@ from src.common.config import FRUIT_BOX_WIDTH
 from src.common.config import FRUIT_BOX_HEIGHT
 from src.common.config import SLIME_BOX_WIDTH
 from src.common.config import SLIME_BOX_HEIGHT
+from src.common.config import BOSS_BOX_WIDTH
+from src.common.config import BOSS_BOX_HEIGHT
 from src.common.config import FRUIT_WIDTH
 from src.common.config import FRUIT_HEIGHT
 from src.common.config import SLIME_WIDTH
@@ -51,6 +56,7 @@ from src.common.config import UP_SEGMENT_COLLISION_TYPE
 from src.common.config import WALL_COLLISION_TYPE
 from src.common.config import PLAYER_ATTACK_RECT_WIDTH
 from src.common.config import PLAYER_ATTACK_RECT_HEIGHT
+from src.common.config import FRUIT_COLLISION_TYPE
 from src.common.common_objects import BaseSprite
 from src.common.common_objects import StaticBlock
 
@@ -108,6 +114,8 @@ class Map:
                 for obj in layer["objects"]:
                     if obj["gid"] == 739:
                         group.add(BlueSlime(game, (SCALE * (obj["x"] + SLIME_WIDTH/2), SCALE * (obj["y"] - SLIME_HEIGHT/2))))
+                    if obj["gid"] == 844:
+                        group.add(BossSlime(game, (SCALE * (obj["x"] + SLIME_WIDTH/2), SCALE * (obj["y"] - SLIME_HEIGHT/2))))
                 self.layers.append(group)
                 self.target_groups.append(group)
             if layer["name"] in ["Boxes"]:
@@ -251,6 +259,7 @@ class Fruit(BasePhysicsSprite):
         self.shape = pymunk.Poly.create_box(body=self.body, size=(box_width * scale, box_height * scale))
         game.space.add(self.body, self.shape)
         self.shape.collision_type = Fruit.ID
+        self.shape.sensor = True
         self.collision_handler = game.space.add_collision_handler(PLAYER_COLLISION_TYPE, Fruit.ID)
         self.collision_handler.begin = self.handler
         Fruit.ID = Fruit.ID + 1
@@ -340,12 +349,12 @@ class Box(BasePhysicsSprite):
 class Slime(BasePhysicsSprite):
     ID = 20000
 
-    def __init__(self, game, position, hp=2):
+    def __init__(self, game, position, hp=2, box_width=SLIME_BOX_WIDTH, box_height=SLIME_BOX_HEIGHT, scale=SLIME_SCALE):
         super().__init__(game)
         self.body = pymunk.Body(body_type=pymunk.Body.DYNAMIC)
         self.body.position = position
         self.shape = pymunk.Poly.create_box(body=self.body,
-                                            size=(SLIME_BOX_WIDTH * SLIME_SCALE, SLIME_BOX_HEIGHT * SLIME_SCALE))
+                                            size=(box_width * scale, box_height * scale))
         game.space.add(self.body, self.shape)
         self.shape.collision_type = Slime.ID
         self.shape.elasticity = 0
@@ -358,7 +367,8 @@ class Slime(BasePhysicsSprite):
         self.state = None
         self.hp = hp
 
-    def slime_begin_handler(self, space, arbiter, data):
+    @staticmethod
+    def slime_begin_handler(space, arbiter, data):
         return False
 
     def handler(self, space, arbiter, data):
@@ -388,6 +398,97 @@ class Slime(BasePhysicsSprite):
 
     def get_rect(self):
         return self.surface.get_surface().get_rect(center=self.body.position)
+
+
+class BossSlime(Slime):
+    def __init__(self, game, position):
+        super().__init__(game, position, hp=30, box_width=BOSS_BOX_WIDTH, box_height=BOSS_BOX_HEIGHT)
+        self.surface = BossSurface()
+        self.set_state(BossSurface.IDLE_STATE)
+        self.face_right = False
+        self.ai = BossSlimeAI(game, self)
+        self.is_jump = False
+        self.body_position_y = self.body.position.y
+        self.jump_frames_tolerance = 3
+        self.lost_hp = 0
+        self.spawn_items = [951, 950, 951, 951, 950, 951]
+
+    def get_hit(self, damage=1):
+        super().get_hit(damage)
+        self.lost_hp = self.lost_hp + damage
+        if self.lost_hp >= 5:
+            self.lost_hp = self.lost_hp - 5
+            self.game.item_spawner.spawn_item(self.spawn_items[-1], self.body.position)
+            self.spawn_items.pop()
+
+    def move_left(self):
+        self.face_right = False
+        self.body.velocity = (-15, self.body.velocity.y)
+        self.surface.set_flip(True)
+
+    def move_right(self):
+        self.face_right = True
+        self.body.velocity = (15, self.body.velocity.y)
+        self.surface.set_flip(False)
+
+    def stop_moving(self):
+        self.body.velocity = (0, self.body.velocity.y)
+
+    def jump(self):
+        if not self.is_jump:
+            self.is_jump = True
+            self.body.velocity = (self.body.velocity.x, -30)
+
+    def update(self, now):
+        super().update(now)
+        self.jump_frames_tolerance = self.jump_frames_tolerance - 1
+        if self.jump_frames_tolerance <= 0:
+            self.jump_frames_tolerance = 3
+            current_position_y = self.body.position.y
+            if abs(current_position_y - self.body_position_y) < 0.1:
+                self.is_jump = False
+            self.body_position_y = current_position_y
+        self.ai.update(now)
+
+
+class BossSlimeAI:
+    def __init__(self, game, slime):
+        self.game = game
+        self.slime = slime
+        self.jump_duration = 50
+        self.original_x = self.slime.body.position.x
+        self.move_range = 300
+        self.turn_duration = 50
+
+    def update(self, now):
+        self.jump_duration = self.jump_duration - 1
+        self.turn_duration = self.turn_duration - 1
+        if self.jump_duration <= 0:
+            self.jump_duration = random.randint(50, 150)
+            self.slime.jump()
+
+        if self.turn_duration <= 0:
+            self.turn_duration = random.randint(50, 110)
+            if self.slime.face_right:
+                self.slime.move_left()
+            else:
+                self.slime.move_right()
+
+            if abs(self.game.player.body.position.x - self.original_x) < 300:
+                if self.slime.body.position.x > self.game.player.body.position.x:
+                    self.slime.move_left()
+                else:
+                    self.slime.move_right()
+        else:
+            if self.slime.face_right:
+                self.slime.move_right()
+            else:
+                self.slime.move_left()
+
+        if (self.slime.body.position.x - self.original_x) > self.move_range:
+            self.slime.move_left()
+        elif (self.slime.body.position.x - self.original_x) < -self.move_range:
+            self.slime.move_right()
 
 
 class BlueSlime(Slime):
@@ -435,7 +536,7 @@ class BlueSlimeAI:
             else:
                 self.slime.move_left()
         else:
-            self.turn_duration = 10
+            self.turn_duration = 2
             current_x_position = self.slime.body.position[0]
             if abs(self.last_x_position - current_x_position) < 0.1:
                 if self.slime.face_right:
