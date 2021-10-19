@@ -53,6 +53,7 @@ from src.common.config import BOX_SCALE
 from src.common.config import BOX_BOX_WIDTH
 from src.common.config import BOX_BOX_HEIGHT
 from src.common.config import PLAYER_COLLISION_TYPE
+from src.common.config import PLAYER_FOOT_COLLISION_TYPE
 from src.common.config import UP_SEGMENT_COLLISION_TYPE
 from src.common.config import WALL_COLLISION_TYPE
 from src.common.config import PLAYER_ATTACK_RECT_WIDTH
@@ -260,7 +261,7 @@ class BasePhysicsSprite(BaseSprite):
         self.game = game
         self.body: pymunk.Body = None
         self.shape: pymunk.Shape = None
-        self.max_velocity = 100
+        self.max_velocity = 60
 
     def update(self, now):
         super().update(now)
@@ -434,7 +435,7 @@ class Slime(BasePhysicsSprite):
 
 class BossSlime(Slime):
     def __init__(self, game, position):
-        super().__init__(game, position, hp=3, box_width=BOSS_BOX_WIDTH, box_height=BOSS_BOX_HEIGHT)
+        super().__init__(game, position, hp=20, box_width=BOSS_BOX_WIDTH, box_height=BOSS_BOX_HEIGHT)
         self.surface = BossSurface()
         self.set_state(BossSurface.IDLE_STATE)
         self.face_right = False
@@ -603,14 +604,19 @@ class Player(BasePhysicsSprite):
         self.body.sprite = self
         self.body.position = (170, 300)
         self.shape = pymunk.Poly.create_box(body=self.body, size=(PLAYER_BOX_WIDTH * PLAYER_SCALE, PLAYER_BOX_HEIGHT * PLAYER_SCALE))
+        self.shape2 = pymunk.Segment(body=self.body,
+                                            a=(0, 0), b=(0, PLAYER_BOX_HEIGHT * PLAYER_SCALE), radius=2)
+        self.shape2.sensor = True
         self.shape.elasticity = 0.0
         self.shape.collision_type = PLAYER_COLLISION_TYPE
         self.shape.mass = 1
-        game.space.add(self.body, self.shape)
+        self.shape2.collision_type = PLAYER_FOOT_COLLISION_TYPE
+        # self.shape2.sensor = True
+        game.space.add(self.body, self.shape, self.shape2)
         self.surface = PlayerSurface()
         self.set_state(PlayerSurface.IDLE_STATE)
         self.score = 0
-        self.collision_handler = game.space.add_collision_handler(PLAYER_COLLISION_TYPE, UP_SEGMENT_COLLISION_TYPE)
+        self.collision_handler = game.space.add_collision_handler(PLAYER_FOOT_COLLISION_TYPE, UP_SEGMENT_COLLISION_TYPE)
         self.collision_handler.begin = self.handler
         self.collision_handler.separate = self.separate
         self.targets = pg.sprite.Group()
@@ -662,6 +668,8 @@ class Player(BasePhysicsSprite):
 
     def update(self, now):
         super().update(now)
+        self.body.angle = 0
+
         if self.body.position.y > MAP_HEIGHT * TILE_HEIGHT * SCALE + 100:
             self.game.game_over()
             return
