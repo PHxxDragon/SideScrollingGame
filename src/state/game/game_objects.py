@@ -407,7 +407,7 @@ class Slime(BasePhysicsSprite):
 
 class BossSlime(Slime):
     def __init__(self, game, position):
-        super().__init__(game, position, hp=30, box_width=BOSS_BOX_WIDTH, box_height=BOSS_BOX_HEIGHT)
+        super().__init__(game, position, hp=3, box_width=BOSS_BOX_WIDTH, box_height=BOSS_BOX_HEIGHT)
         self.surface = BossSurface()
         self.set_state(BossSurface.IDLE_STATE)
         self.face_right = False
@@ -425,6 +425,10 @@ class BossSlime(Slime):
             self.lost_hp = self.lost_hp - 5
             self.game.item_spawner.spawn_item(self.spawn_items[-1], self.body.position)
             self.spawn_items.pop()
+
+    def kill(self) -> None:
+        super().kill()
+        self.game.game_over(True)
 
     def move_left(self):
         self.face_right = False

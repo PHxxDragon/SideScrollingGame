@@ -21,6 +21,7 @@ from src.common.config import SLIME_COLLISION_TYPE
 from src.common.config import THROW_BOX_COLLISION_TYPE
 from src.common.config import UP_SEGMENT_COLLISION_TYPE
 
+
 class Game(State):
     def __init__(self):
         super().__init__()
@@ -140,8 +141,12 @@ class Game(State):
         fruit.eat()
         return False
 
-    def game_over(self):
-        music.load("game-over.mp3")
+    def game_over(self, is_win=False):
+        if is_win:
+            self.game_over_text.set_text("Congratulation !")
+            music.load("victory.mp3")
+        else:
+            music.load("game-over.mp3")
         music.start()
         self.is_game_over = True
 
